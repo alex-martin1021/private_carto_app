@@ -25,69 +25,18 @@
   </head>
   <body>
     <div id="app">
-      <div id="map"></div>
-      <canvas id="deck-canvas"></canvas>
-      <div id="story-card">
-        <div id="login-app">
-          <button id="login">Login</button>
-          <div id="login-content">
-            <header>
-              <button id="logout">Logout</button>
-              <div id="profile"></div>
-            </header>
-            <div id="map"></div>
-            <canvas id="deck-canvas"></canvas>
-          </div>
+      <div id="map" style="width: 100vw; height: 100vh;"></div>
+      <canvas id="deck-canvas" style="position: absolute; top: 0; left: 0;"></canvas>
+
+      <!-- Auth UI Elements (hidden but present for JS) -->
+      <div id="login-app" style="display:none;">
+        <button id="login">Login</button>
+        <div id="login-content">
+          <header>
+            <button id="logout">Logout</button>
+            <div id="profile"></div>
+          </header>
         </div>
-        <p class="overline">✨👀 You're viewing</p>
-        <h2>fetchMap Example</h2>
-        <p>
-          This example showcases how to integrate a map created in CARTO Builder
-          into a custom CARTO + Deck.gl application. It uses
-          <code>fetchMap</code> from <code>@carto/api-client</code> to retrieve
-          the map configuration and layers.
-        </p>
-        <p class="small">
-          Learn more about
-          <a
-            href="https://docs.carto.com/carto-for-developers/reference/fetchmap"
-            rel="noopener noreferrer"
-            target="_blank"
-            >fetchMap</a
-          >.
-        </p>
-
-        <div id="map-selector-container" class="content-section-container">
-          <h3 class="map-selector-title">Select one or more available maps</h3>
-          <!-- Checkboxes will be dynamically inserted here by the script -->
-          <button id="load-maps-button" class="map-selector-button">
-            Load Maps
-          </button>
-        </div>
-
-        <div class="content-section-container">
-          <h3 class="map-selector-title">Loaded maps</h3>
-          <div id="map-info-widget">
-            <dl>
-              <dt>Map Title(s):</dt>
-              <dd id="mapName">Loading...</dd>
-
-              <dt>Number of Layers:</dt>
-              <dd id="layerCount">Loading...</dd>
-            </dl>
-          </div>
-        </div>
-
-        <hr />
-        <p class="caption">
-          Source:
-          <a
-            href="https://carto.com/spatial-data-catalog/browser"
-            rel="noopener noreferrer"
-            target="_blank"
-            >CARTO Data Observatory</a
-          >
-        </p>
       </div>
     </div>
     <script type="module" src="./index.ts"></script>
