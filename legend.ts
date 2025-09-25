@@ -16,11 +16,35 @@ function formatLegendNumber(num: number): string {
 
 // Create a legend for the given layers
 export function createLegend(layers: LayerDescriptor[]): HTMLElement {
+
   const wrapper = document.createElement('div');
   wrapper.className = 'legend-wrapper';
 
+  // Add collapsible toggle button
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = 'legend-toggle-btn';
+  toggleBtn.id = 'legend-toggle';
+  toggleBtn.innerHTML = '&#8595;'; // Down arrow
+  toggleBtn.setAttribute('aria-label', 'Toggle legend');
+
   const container = document.createElement('div');
   container.className = 'legend-container';
+
+  let legendVisible = true;
+  toggleBtn.addEventListener('click', () => {
+    legendVisible = !legendVisible;
+    if (legendVisible) {
+      container.style.opacity = '1';
+      container.style.pointerEvents = 'auto';
+      container.style.transform = 'translateY(0)';
+      toggleBtn.innerHTML = '&#8595;'; // Down arrow
+    } else {
+      container.style.opacity = '0';
+      container.style.pointerEvents = 'none';
+      container.style.transform = 'translateY(20px)';
+      toggleBtn.innerHTML = '&#8593;'; // Up arrow
+    }
+  });
 
   layers.forEach((layer, index) => {
     const layerId = ((layer.props as any)?.id || `layer-${index}`) as string;
@@ -207,5 +231,6 @@ export function createLegend(layers: LayerDescriptor[]): HTMLElement {
   });
 
   wrapper.appendChild(container);
+  wrapper.appendChild(toggleBtn);
   return wrapper;
 }

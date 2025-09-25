@@ -10,6 +10,42 @@ import "./legend.css";
 import { buildTooltip } from "./tooltip";
 import { initAuth } from "./auth";
 
+// Read URL parameters 'a' and 'b' and print them to the console
+const urlParams = new URLSearchParams(window.location.search);
+const paramA = urlParams.get('a');
+const paramB = urlParams.get('b');
+console.log('URL parameter a:', paramA);
+console.log('URL parameter b:', paramB);
+
+// Read map view parameters with defaults
+function getNumberParam(param: string, defaultValue: number): number {
+  const value = urlParams.get(param);
+  return value !== null && !isNaN(Number(value)) ? Number(value) : defaultValue;
+}
+
+const defaultView = {
+  latitude: 0,
+  longitude: 0,
+  zoom: 1,
+  bearing: 0,
+  pitch: 0
+};
+
+const INITIAL_VIEW_STATE = {
+  latitude: getNumberParam('lat', defaultView.latitude),
+  longitude: getNumberParam('long', defaultView.longitude),
+  zoom: getNumberParam('zoom', defaultView.zoom),
+  bearing: defaultView.bearing, // bearing not exposed in URL params
+  pitch: getNumberParam('pitch', defaultView.pitch)
+};
+
+console.log('Map view params:', {
+  latitude: INITIAL_VIEW_STATE.latitude,
+  longitude: INITIAL_VIEW_STATE.longitude,
+  zoom: INITIAL_VIEW_STATE.zoom,
+  pitch: INITIAL_VIEW_STATE.pitch
+});
+
 let accessToken: string | undefined;
 
 await initAuth().then((token) => {
@@ -31,13 +67,7 @@ const baseFetchMapOptions = {
 
 const layerCountEl = document.querySelector<HTMLDListElement>("#layerCount");
 
-const INITIAL_VIEW_STATE = {
-  latitude: 0,
-  longitude: 0,
-  zoom: 1,
-  bearing: 0,
-  pitch: 0,
-};
+// ...INITIAL_VIEW_STATE now set above...
 
 let currentMapData: {
   title: string;
@@ -84,11 +114,22 @@ async function initialize() {
       return;
     }
 
+
+    // Use URL params to override fetched initialViewState if present
+    const fetchedView = mapData.initialViewState || {};
+    const overrideView = {
+      latitude: isNaN(INITIAL_VIEW_STATE.latitude) ? fetchedView.latitude : INITIAL_VIEW_STATE.latitude,
+      longitude: isNaN(INITIAL_VIEW_STATE.longitude) ? fetchedView.longitude : INITIAL_VIEW_STATE.longitude,
+      zoom: isNaN(INITIAL_VIEW_STATE.zoom) ? fetchedView.zoom : INITIAL_VIEW_STATE.zoom,
+      bearing: fetchedView.bearing ?? 0,
+      pitch: isNaN(INITIAL_VIEW_STATE.pitch) ? fetchedView.pitch : INITIAL_VIEW_STATE.pitch
+    };
+
     currentMapData = {
       title: mapData.title || "Untitled Map",
       layers: mapData.layers || [],
       popupSettings: mapData.popupSettings || null,
-      initialViewState: mapData.initialViewState || INITIAL_VIEW_STATE,
+      initialViewState: overrideView,
     };
 
     if (layerCountEl) {
@@ -120,11 +161,12 @@ async function initialize() {
       layers: LayerFactory(currentMapData.layers),
     });
 
+    const view = (currentMapData.initialViewState || {}) as any;
     map.jumpTo({
-      center: [currentMapData.initialViewState?.longitude || 0, currentMapData.initialViewState?.latitude || 0],
-      zoom: currentMapData.initialViewState?.zoom || 1,
-      bearing: currentMapData.initialViewState?.bearing || 0,
-      pitch: currentMapData.initialViewState?.pitch || 0,
+      center: [view.longitude ?? 0, view.latitude ?? 0],
+      zoom: view.zoom ?? 1,
+      bearing: view.bearing ?? 0,
+      pitch: view.pitch ?? 0,
     });
   } catch (error) {
     if (layerCountEl) layerCountEl.innerHTML = "Error";
