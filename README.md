@@ -23,3 +23,7 @@ Commands:
 
 - `npm run dev` is the development target, to serve the app and hot reload.
 - `npm run build` is the production target, to create the final bundle and write to disk.
+
+
+
+test url param: ?lat=51.0447&long=-114.0719&zoom=12&pitch=0

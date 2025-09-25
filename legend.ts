@@ -30,7 +30,13 @@ export function createLegend(layers: LayerDescriptor[]): HTMLElement {
   const container = document.createElement('div');
   container.className = 'legend-container';
 
-  let legendVisible = true;
+  let legendVisible = false;
+  // Set initial state to closed
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
+  container.style.transform = 'translateY(20px)';
+  toggleBtn.innerHTML = '&#8593;'; // Up arrow
+
   toggleBtn.addEventListener('click', () => {
     legendVisible = !legendVisible;
     if (legendVisible) {
