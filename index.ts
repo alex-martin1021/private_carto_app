@@ -10,12 +10,23 @@ import "./legend.css";
 import { buildTooltip } from "./tooltip";
 import { initAuth } from "./auth";
 
-// Read URL parameters 'a' and 'b' and print them to the console
+// Helper to show/hide login box
+function setLoginBoxVisible(visible: boolean) {
+  const loginBox = document.getElementById('login-box');
+  if (loginBox) {
+    loginBox.style.display = visible ? 'block' : 'none';
+  }
+}
+
+// Read URL parameters 'a', 'b', and 'address' and print them to the console
 const urlParams = new URLSearchParams(window.location.search);
 const paramA = urlParams.get('a');
 const paramB = urlParams.get('b');
+const addressParam = urlParams.get('address'); // New address param
+
 console.log('URL parameter a:', paramA);
 console.log('URL parameter b:', paramB);
+console.log('URL parameter address:', addressParam);
 
 // Read map view parameters with defaults
 function getNumberParam(param: string, defaultValue: number): number {
@@ -31,7 +42,7 @@ const defaultView = {
   pitch: 0
 };
 
-const INITIAL_VIEW_STATE = {
+let INITIAL_VIEW_STATE = {
   latitude: getNumberParam('lat', defaultView.latitude),
   longitude: getNumberParam('long', defaultView.longitude),
   zoom: getNumberParam('zoom', defaultView.zoom),
@@ -39,19 +50,71 @@ const INITIAL_VIEW_STATE = {
   pitch: getNumberParam('pitch', defaultView.pitch)
 };
 
-console.log('Map view params:', {
+console.log('Initial map view params before geocoding:', {
   latitude: INITIAL_VIEW_STATE.latitude,
   longitude: INITIAL_VIEW_STATE.longitude,
   zoom: INITIAL_VIEW_STATE.zoom,
   pitch: INITIAL_VIEW_STATE.pitch
 });
 
+// Geocode function using OpenStreetMap Nominatim API
+async function geocodeAddress(address: string): Promise<{ latitude: number; longitude: number } | null> {
+  const encodedAddress = encodeURIComponent(address);
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`;
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      console.warn('Geocoding API returned error status:', response.status);
+      return null;
+    }
+    const results = await response.json();
+    if (results && results.length > 0) {
+      const { lat, lon } = results[0];
+      return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching geocode:', error);
+    return null;
+  }
+}
+
 let accessToken: string | undefined;
 
-await initAuth().then((token) => {
+await initAuth().then(async (token) => {
   if (token) {
     accessToken = token;
+    setLoginBoxVisible(false);
+  } else {
+    setLoginBoxVisible(true);
   }
+
+  // If address param is present, override INITIAL_VIEW_STATE with geocoded coords
+  if (addressParam && addressParam.trim() !== "") {
+    const coords = await geocodeAddress(addressParam);
+    if (coords) {
+      console.log(`Geocoded address "${addressParam}" to coords:`, coords);
+      INITIAL_VIEW_STATE = {
+        ...INITIAL_VIEW_STATE,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        zoom: Math.max(INITIAL_VIEW_STATE.zoom, 12), // zoom in a bit more for addresses
+      };
+    } else {
+      console.warn(`Could not geocode address: "${addressParam}". Using default or URL params.`);
+    }
+  }
+
+  console.log('Map view params after geocoding:', {
+    latitude: INITIAL_VIEW_STATE.latitude,
+    longitude: INITIAL_VIEW_STATE.longitude,
+    zoom: INITIAL_VIEW_STATE.zoom,
+    pitch: INITIAL_VIEW_STATE.pitch,
+  });
 });
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -66,8 +129,6 @@ const baseFetchMapOptions = {
 };
 
 const layerCountEl = document.querySelector<HTMLDListElement>("#layerCount");
-
-// ...INITIAL_VIEW_STATE now set above...
 
 let currentMapData: {
   title: string;
@@ -113,7 +174,6 @@ async function initialize() {
       if (layerCountEl) layerCountEl.innerHTML = "Error loading map";
       return;
     }
-
 
     // Use URL params to override fetched initialViewState if present
     const fetchedView = mapData.initialViewState || {};

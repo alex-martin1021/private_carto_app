@@ -34,11 +34,13 @@ export async function initAuth() {
     accessToken = await auth0Client.getTokenSilently();
 
     if (userProfile) {
-      const profileEl = document.getElementById("profile")!;
-      profileEl.innerHTML = `
-            <p>${userProfile.name}</p>
-            <img width="50px" height="50px" src='${userProfile.picture}' />
-          `;
+      const profileEl = document.getElementById("profile");
+      if (profileEl) {
+        profileEl.innerHTML = `
+          <p>${userProfile.name}</p>
+          <img width="50px" height="50px" src='${userProfile.picture}' />
+        `;
+      }
     }
   } else {
     appEl?.classList.remove("isAuthenticated");

@@ -28,15 +28,9 @@
       <div id="map" style="width: 100vw; height: 100vh;"></div>
       <canvas id="deck-canvas" style="position: absolute; top: 0; left: 0;"></canvas>
 
-      <!-- Auth UI Elements (hidden but present for JS) -->
-      <div id="login-app" style="display:none;">
-        <button id="login">Login</button>
-        <div id="login-content">
-          <header>
-            <button id="logout">Logout</button>
-            <div id="profile"></div>
-          </header>
-        </div>
+      <!-- Auth UI Elements: Login box in top left -->
+      <div id="login-box" style="position:fixed;top:24px;left:24px;z-index:20000;display:none;background:#fff;padding:20px;border-radius:8px;box-shadow:2px 2px 12px #30303033;">
+        <button id="login" style="font-size:1.1rem;padding:10px 24px;border-radius:6px;background:#036fe2;color:#fff;border:none;cursor:pointer;">Login</button>
       </div>
     </div>
     <script type="module" src="./index.ts"></script>
