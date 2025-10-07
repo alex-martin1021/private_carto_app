@@ -20,12 +20,8 @@ function setLoginBoxVisible(visible: boolean) {
 
 // Read URL parameters 'a', 'b', and 'address' and print them to the console
 const urlParams = new URLSearchParams(window.location.search);
-const paramA = urlParams.get('a');
-const paramB = urlParams.get('b');
 const addressParam = urlParams.get('address'); // New address param
 
-console.log('URL parameter a:', paramA);
-console.log('URL parameter b:', paramB);
 console.log('URL parameter address:', addressParam);
 
 // Read map view parameters with defaults
@@ -57,28 +53,32 @@ console.log('Initial map view params before geocoding:', {
   pitch: INITIAL_VIEW_STATE.pitch
 });
 
-// Geocode function using OpenStreetMap Nominatim API
+
+// Geocode function using Google Maps Geocoding API
 async function geocodeAddress(address: string): Promise<{ latitude: number; longitude: number } | null> {
+  const apiKey = import.meta.env.VITE_GOOGLEMAPS_API_KEY;
   const encodedAddress = encodeURIComponent(address);
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
+
   try {
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
+    const response = await fetch(url);
     if (!response.ok) {
-      console.warn('Geocoding API returned error status:', response.status);
+      console.warn('Google Geocoding API returned error status:', response.status);
       return null;
     }
-    const results = await response.json();
-    if (results && results.length > 0) {
-      const { lat, lon } = results[0];
-      return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
+    const data = await response.json();
+    if (data.status !== "OK" || data.results.length === 0) {
+      console.warn('Google Geocoding API returned no results:', data.status);
+      return null;
     }
-    return null;
+
+    const location = data.results[0].geometry.location;
+    return {
+      latitude: location.lat,
+      longitude: location.lng,
+    };
   } catch (error) {
-    console.error('Error fetching geocode:', error);
+    console.error('Error fetching geocode from Google:', error);
     return null;
   }
 }
